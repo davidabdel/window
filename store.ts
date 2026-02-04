@@ -47,11 +47,31 @@ export function useAppStore() {
     };
   }, []);
 
-  const setBusiness = (business: Business) => {
+
+  const API_URL = 'https://windowrun-api.david-d4d.workers.dev';
+
+  const setBusiness = async (business: Business) => {
     globalState = { ...globalState, business };
     saveToStorage();
-    // If setting business (signup/setup), we generally consider them authenticated or we require login next.
-    // Based on user flow, we'll auto-login on setup.
+
+    // Sync with Cloudflare D1
+    try {
+      await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: business.name,
+          email: business.email,
+          abn: business.abn,
+          password: business.password
+        })
+      });
+    } catch (e) {
+      console.error("Failed to sync signup to cloud", e);
+      // We don't block the user, we just log it. 
+      // In a real app we'd queue this for retry.
+    }
+
     if (globalState.business) {
       globalIsAuthenticated = true;
     }
@@ -68,11 +88,28 @@ export function useAppStore() {
     emitChange();
   };
 
-  const login = (password: string, email?: string) => {
+  const syncAdminUsers = async () => {
+    if (!(globalState as any).isAdmin) return;
+    try {
+      const res = await fetch(`${API_URL}/users`, {
+        headers: { 'X-Admin-Key': 'some-secret-key' } // In real helper add this
+      });
+      if (res.ok) {
+        // This is where we would merge cloud users into local view for admin
+        // For now, let's just return them or store them in a special 'adminViewUsers' state
+        const cloudUsers = await res.json();
+        return cloudUsers;
+      }
+    } catch (e) {
+      console.error("Failed to fetch users", e);
+    }
+    return [];
+  };
+
+  const login = async (password: string, email?: string) => {
     // Super Admin Check
     if (email === 'david@uconnect.com.au' && password === 'admin123') {
       globalIsAuthenticated = true;
-      // We'll store a transient admin flag
       (globalState as any).isAdmin = true;
       emitChange();
       return { success: true, isAdmin: true };
@@ -198,6 +235,7 @@ export function useAppStore() {
     updateQuote,
     addJob,
     updateJob,
-    convertQuoteToJob
+    convertQuoteToJob,
+    syncAdminUsers
   };
 }

@@ -1,0 +1,9 @@
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    businessName TEXT,
+    email TEXT UNIQUE,
+    abn TEXT,
+    password TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);

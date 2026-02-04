@@ -1,0 +1,14 @@
+
+name = "windowrun-api"
+main = "src/index.ts"
+compatibility_date = "2024-02-05"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "windowrun-db"
+database_id = "72f7c0f1-751c-4e97-9f44-656a5512639e"
+
+[cors]
+origins = ["*"]
+methods = ["Authorization", "Method"]
+max_age = 86400
