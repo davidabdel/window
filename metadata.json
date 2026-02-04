@@ -1,0 +1,5 @@
+{
+  "name": "Solo Window Cleaning Hub",
+  "description": "A streamlined mobile-first workspace for solo window cleaners to manage customers, quotes, jobs, and invoicing via webhooks.",
+  "requestFramePermissions": []
+}
