@@ -205,7 +205,7 @@ export function useAppStore() {
     emitChange();
   };
 
-  const convertQuoteToJob = (quoteId: string, scheduledDate: string) => {
+  const convertQuoteToJob = (quoteId: string, scheduledDate: string, recurrence?: Job['recurrence']) => {
     const quote = globalState.quotes.find(q => q.id === quoteId);
     if (!quote) return;
 
@@ -216,7 +216,8 @@ export function useAppStore() {
       scheduledDate,
       price: quote.amount,
       notes: quote.notes,
-      status: 'scheduled'
+      status: 'scheduled',
+      recurrence
     });
 
     updateQuote(quoteId, { status: 'accepted' });

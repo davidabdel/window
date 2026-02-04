@@ -9,7 +9,7 @@ const QuoteForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state, addQuote, updateQuote, convertQuoteToJob } = useAppStore();
-  
+
   const [form, setForm] = useState<{
     customerId: string;
     description: string;
@@ -26,6 +26,7 @@ const QuoteForm: React.FC = () => {
 
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0] + 'T09:00');
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -59,7 +60,8 @@ const QuoteForm: React.FC = () => {
 
   const handleConvert = () => {
     if (!id) return;
-    convertQuoteToJob(id, scheduledDate);
+    const recurrence = recurrenceFrequency ? { frequency: recurrenceFrequency as any } : undefined;
+    convertQuoteToJob(id, scheduledDate, recurrence);
     navigate('/jobs');
   };
 
@@ -77,7 +79,7 @@ const QuoteForm: React.FC = () => {
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Customer *</label>
-          <select 
+          <select
             required
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
             value={form.customerId}
@@ -85,7 +87,7 @@ const QuoteForm: React.FC = () => {
               const customerId = e.target.value;
               const customer = state.customers.find(c => c.id === customerId);
               setForm({
-                ...form, 
+                ...form,
                 customerId,
                 amount: customer?.defaultPrice?.toString() || form.amount
               });
@@ -103,33 +105,33 @@ const QuoteForm: React.FC = () => {
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Description *</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             required
             placeholder="e.g. Full interior & exterior clean"
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             value={form.description}
-            onChange={e => setForm({...form, description: e.target.value})}
+            onChange={e => setForm({ ...form, description: e.target.value })}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Amount ($) *</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               required
               className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold"
               value={form.amount}
-              onChange={e => setForm({...form, amount: e.target.value})}
+              onChange={e => setForm({ ...form, amount: e.target.value })}
             />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Status</label>
-            <select 
+            <select
               className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
               value={form.status}
-              onChange={e => setForm({...form, status: e.target.value as QuoteStatus})}
+              onChange={e => setForm({ ...form, status: e.target.value as QuoteStatus })}
             >
               <option value="draft">Draft</option>
               <option value="needs-follow-up">Needs Follow-Up</option>
@@ -140,17 +142,17 @@ const QuoteForm: React.FC = () => {
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Internal Notes</label>
-          <textarea 
+          <textarea
             rows={3}
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             value={form.notes}
-            onChange={e => setForm({...form, notes: e.target.value})}
+            onChange={e => setForm({ ...form, notes: e.target.value })}
           />
         </div>
 
         <div className="pt-4 flex flex-col gap-3">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
             <Save size={20} />
@@ -158,7 +160,7 @@ const QuoteForm: React.FC = () => {
           </button>
 
           {id && form.status !== 'accepted' && (
-            <button 
+            <button
               type="button"
               onClick={() => setShowConvertModal(true)}
               className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
@@ -183,22 +185,36 @@ const QuoteForm: React.FC = () => {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase px-1">Date & Time</label>
-              <input 
-                type="datetime-local" 
+              <input
+                type="datetime-local"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 value={scheduledDate}
                 onChange={e => setScheduledDate(e.target.value)}
               />
             </div>
 
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-500 uppercase px-1">Recurrence</label>
+              <select
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                value={recurrenceFrequency}
+                onChange={e => setRecurrenceFrequency(e.target.value)}
+              >
+                <option value="">Does not repeat</option>
+                <option value="weekly">Weekly</option>
+                <option value="fortnightly">Fortnightly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+
             <div className="flex flex-col gap-2 pt-2">
-              <button 
+              <button
                 onClick={handleConvert}
                 className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-50 hover:bg-emerald-700 transition-colors"
               >
                 Confirm & Create Job
               </button>
-              <button 
+              <button
                 onClick={() => setShowConvertModal(false)}
                 className="w-full bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition-colors"
               >

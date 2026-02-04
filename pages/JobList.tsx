@@ -1,29 +1,29 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Calendar, CheckCircle, ChevronRight, MapPin, Clock } from 'lucide-react';
+import { Plus, Search, Calendar, CheckCircle, ChevronRight, MapPin, Clock, Repeat } from 'lucide-react';
 import { useAppStore } from '../store';
 
 const JobList: React.FC = () => {
   const { state } = useAppStore();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  
+
   const viewFilter = searchParams.get('view') || 'all';
 
   const filtered = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
-    
+
     return state.jobs.filter(j => {
       const customer = state.customers.find(c => c.id === j.customerId);
-      const matchesSearch = customer?.name.toLowerCase().includes(search.toLowerCase()) || 
-                            j.description.toLowerCase().includes(search.toLowerCase());
-      
+      const matchesSearch = customer?.name.toLowerCase().includes(search.toLowerCase()) ||
+        j.description.toLowerCase().includes(search.toLowerCase());
+
       let matchesView = true;
       if (viewFilter === 'today') matchesView = j.scheduledDate.startsWith(todayStr) && j.status === 'scheduled';
       if (viewFilter === 'upcoming') matchesView = j.scheduledDate > todayStr && j.status === 'scheduled';
       if (viewFilter === 'completed') matchesView = j.status === 'completed';
-      
+
       return matchesSearch && matchesView;
     }).sort((a, b) => {
       if (viewFilter === 'completed') return new Date(b.completedAt || '').getTime() - new Date(a.completedAt || '').getTime();
@@ -42,8 +42,8 @@ const JobList: React.FC = () => {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold text-slate-900">Jobs</h1>
-        <Link 
-          to="/jobs/new" 
+        <Link
+          to="/jobs/new"
           className="bg-blue-600 text-white p-2 rounded-full shadow-lg shadow-blue-100"
         >
           <Plus size={24} />
@@ -55,9 +55,8 @@ const JobList: React.FC = () => {
           <Link
             key={tab.id}
             to={`/jobs?view=${tab.id}`}
-            className={`flex-1 min-w-[70px] py-2 text-[11px] font-bold uppercase text-center rounded-lg transition-all ${
-              viewFilter === tab.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'
-            }`}
+            className={`flex-1 min-w-[70px] py-2 text-[11px] font-bold uppercase text-center rounded-lg transition-all ${viewFilter === tab.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'
+              }`}
           >
             {tab.label}
           </Link>
@@ -66,7 +65,7 @@ const JobList: React.FC = () => {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input 
+        <input
           type="text"
           className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
           placeholder="Search jobs..."
@@ -83,12 +82,11 @@ const JobList: React.FC = () => {
             const isCompleted = job.status === 'completed';
 
             return (
-              <Link 
-                key={job.id} 
+              <Link
+                key={job.id}
                 to={`/jobs/${job.id}`}
-                className={`block bg-white border p-4 rounded-2xl active:bg-slate-50 transition-colors shadow-sm ${
-                  isCompleted ? 'border-slate-100 opacity-75' : 'border-slate-200'
-                }`}
+                className={`block bg-white border p-4 rounded-2xl active:bg-slate-50 transition-colors shadow-sm ${isCompleted ? 'border-slate-100 opacity-75' : 'border-slate-200'
+                  }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
@@ -100,7 +98,7 @@ const JobList: React.FC = () => {
                   </div>
                   <p className="font-bold text-slate-900">${job.price}</p>
                 </div>
-                
+
                 <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded-lg mb-3 line-clamp-1 border border-slate-100 italic">
                   "{job.description}"
                 </p>
@@ -112,6 +110,12 @@ const JobList: React.FC = () => {
                       {date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })} @ {date.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
+                  {job.recurrence && (
+                    <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                      <Repeat size={10} />
+                      <span className="text-[10px] font-bold uppercase">{job.recurrence.frequency}</span>
+                    </div>
+                  )}
                   {isCompleted ? (
                     <div className="flex items-center gap-1 text-emerald-600">
                       <CheckCircle size={14} />

@@ -40,6 +40,10 @@ export interface Job {
   notes?: string;
   status: JobStatus;
   completedAt?: string;
+  recurrence?: {
+    frequency: 'weekly' | 'fortnightly' | 'monthly';
+    endDate?: string;
+  };
 }
 
 export interface AppState {
