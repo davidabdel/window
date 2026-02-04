@@ -51,10 +51,13 @@ export function useAppStore() {
   const API_URL = 'https://windowrun-api.david-d4d.workers.dev';
 
   const setBusiness = async (business: Business) => {
+    // 1. Update Local State Immediately (Optimistic)
     globalState = { ...globalState, business };
+    globalIsAuthenticated = true; // Authenticate immediately
     saveToStorage();
+    emitChange(); // Notify app immediately so navigation works
 
-    // Sync with Cloudflare D1
+    // 2. Sync with Cloudflare D1 (Background)
     try {
       await fetch(`${API_URL}/register`, {
         method: 'POST',
@@ -68,14 +71,7 @@ export function useAppStore() {
       });
     } catch (e) {
       console.error("Failed to sync signup to cloud", e);
-      // We don't block the user, we just log it. 
-      // In a real app we'd queue this for retry.
     }
-
-    if (globalState.business) {
-      globalIsAuthenticated = true;
-    }
-    emitChange();
   };
 
   const updateBusiness = (updates: Partial<Business>) => {
