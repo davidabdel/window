@@ -14,6 +14,7 @@ import {
 import { useAppStore } from './store';
 
 // Pages
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
@@ -38,7 +39,7 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }
 
   const navItems = [
-    { label: 'Home', icon: LayoutDashboard, path: '/' },
+    { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Customers', icon: Users, path: '/customers' },
     { label: 'Quotes', icon: FileText, path: '/quotes' },
     { label: 'Jobs', icon: Briefcase, path: '/jobs' },
@@ -62,7 +63,7 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-1 flex justify-around items-center pb-safe shadow-lg z-40">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (item.path === '/dashboard' && location.pathname === '/');
           const Icon = item.icon;
           return (
             <Link
@@ -85,10 +86,13 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
 
-        <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
         <Route path="/customers" element={<ProtectedLayout><CustomerList /></ProtectedLayout>} />
         <Route path="/customers/new" element={<ProtectedLayout><CustomerForm /></ProtectedLayout>} />
         <Route path="/customers/:id" element={<ProtectedLayout><CustomerForm /></ProtectedLayout>} />
@@ -103,6 +107,7 @@ const App: React.FC = () => {
 
         <Route path="/settings" element={<ProtectedLayout><SettingsPage /></ProtectedLayout>} />
 
+        {/* Catch all - redirect to Landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
