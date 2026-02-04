@@ -24,7 +24,7 @@ const Signup: React.FC = () => {
       email: form.email,
       password: form.password
     });
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (

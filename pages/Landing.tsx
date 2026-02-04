@@ -11,8 +11,10 @@ import {
     Menu,
     X
 } from 'lucide-react';
+import { useAppStore } from '../store';
 
 const Landing: React.FC = () => {
+    const { isAuthenticated } = useAppStore();
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
@@ -30,10 +32,18 @@ const Landing: React.FC = () => {
 
                         <div className="hidden md:block">
                             <div className="ml-10 flex items-baseline space-x-8">
-                                <Link to="/login" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</Link>
-                                <Link to="/signup" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:shadow-lg hover:shadow-blue-500/25">
-                                    Get Started
-                                </Link>
+                                {isAuthenticated ? (
+                                    <Link to="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:shadow-lg hover:shadow-blue-500/25">
+                                        Go to Settings
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link to="/login" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</Link>
+                                        <Link to="/signup" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:shadow-lg hover:shadow-blue-500/25">
+                                            Get Started
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -52,8 +62,14 @@ const Landing: React.FC = () => {
                 {mobileMenuOpen && (
                     <div className="md:hidden bg-slate-900 border-b border-slate-800">
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800">Login</Link>
-                            <Link to="/signup" className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:text-blue-300 font-bold">Get Started</Link>
+                            {isAuthenticated ? (
+                                <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:text-blue-300 font-bold">Go to Settings</Link>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800">Login</Link>
+                                    <Link to="/signup" className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:text-blue-300 font-bold">Get Started</Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
@@ -83,12 +99,20 @@ const Landing: React.FC = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-500 hover:scale-105 transition-all shadow-xl shadow-blue-500/20">
-                            Start Free Trial <ArrowRight className="ml-2" size={20} />
-                        </Link>
-                        <Link to="/login" className="inline-flex items-center justify-center px-8 py-4 border border-slate-700 text-lg font-medium rounded-xl text-slate-300 bg-slate-800/50 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-sm">
-                            Log In
-                        </Link>
+                        {isAuthenticated ? (
+                            <Link to="/dashboard" className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-500 hover:scale-105 transition-all shadow-xl shadow-blue-500/20">
+                                Go to Settings <ArrowRight className="ml-2" size={20} />
+                            </Link>
+                        ) : (
+                            <>
+                                <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-500 hover:scale-105 transition-all shadow-xl shadow-blue-500/20">
+                                    Start Free Trial <ArrowRight className="ml-2" size={20} />
+                                </Link>
+                                <Link to="/login" className="inline-flex items-center justify-center px-8 py-4 border border-slate-700 text-lg font-medium rounded-xl text-slate-300 bg-slate-800/50 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-sm">
+                                    Log In
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Hero Image / Dashboard Preview */}

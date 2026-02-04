@@ -8,6 +8,7 @@ const Login: React.FC = () => {
     const { login, state } = useAppStore();
     const navigate = useNavigate();
     const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState('');
 
     // If no business exists, they should probably signup first.
@@ -16,11 +17,15 @@ const Login: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const success = login(password);
-        if (success) {
-            navigate('/');
+        const result = login(password, email);
+        if (result.success) {
+            if (result.isAdmin) {
+                navigate('/admin');
+            } else {
+                navigate('/dashboard');
+            }
         } else {
-            setError('Incorrect password');
+            setError('Incorrect email or password');
         }
     };
 
@@ -38,6 +43,20 @@ const Login: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase px-1">Email</label>
+                        <div className="relative">
+                            <input
+                                type="email"
+                                required
+                                className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-4 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-500 uppercase px-1">Password</label>
                         <div className="relative">

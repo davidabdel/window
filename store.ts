@@ -58,14 +58,41 @@ export function useAppStore() {
     emitChange();
   };
 
-  const login = (password: string) => {
-    if (!globalState.business?.password) return false;
+  const updateBusiness = (updates: Partial<Business>) => {
+    if (!globalState.business) return;
+    globalState = {
+      ...globalState,
+      business: { ...globalState.business, ...updates }
+    };
+    saveToStorage();
+    emitChange();
+  };
+
+  const login = (password: string, email?: string) => {
+    // Super Admin Check
+    if (email === 'david@uconnect.com.au' && password === 'admin123') {
+      globalIsAuthenticated = true;
+      // We'll store a transient admin flag
+      (globalState as any).isAdmin = true;
+      emitChange();
+      return { success: true, isAdmin: true };
+    }
+
+    // Regular User Check
+    if (!globalState.business?.password) return { success: false };
+
+    // If email is provided, verify it matches
+    if (email && email !== globalState.business.email) {
+      return { success: false };
+    }
+
     if (globalState.business.password === password) {
       globalIsAuthenticated = true;
+      (globalState as any).isAdmin = false;
       emitChange();
-      return true;
+      return { success: true, isAdmin: false };
     }
-    return false;
+    return { success: false };
   };
 
   const logout = () => {
@@ -164,6 +191,7 @@ export function useAppStore() {
     login,
     logout,
     resetApp,
+    updateBusiness,
     addCustomer,
     updateCustomer,
     addQuote,

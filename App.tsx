@@ -24,6 +24,7 @@ import QuoteList from './pages/QuoteList';
 import QuoteForm from './pages/QuoteForm';
 import JobList from './pages/JobList';
 import JobForm from './pages/JobForm';
+import AdminDashboard from './pages/AdminDashboard';
 import SettingsPage from './pages/SettingsView';
 
 const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,6 +91,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
