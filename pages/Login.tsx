@@ -14,10 +14,10 @@ const Login: React.FC = () => {
     // If no business exists, they should probably signup first.
     // Although ProtectedLayout redirects to /signup if no business.
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const result = login(password, email);
+        const result = await login(password, email);
         if (result.success) {
             if (result.isAdmin) {
                 navigate('/admin');
