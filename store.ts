@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { AppState, Business, Customer, Quote, Job } from './types';
 
-const STORAGE_KEY = 'windowrun_app_state';
+const STORAGE_KEY = 'windowrun_app_state_v1';
 
 const initialState: AppState = {
   business: null,
@@ -139,7 +139,12 @@ export function useAppStore() {
 
   const resetApp = () => {
     localStorage.removeItem(STORAGE_KEY);
-    globalState = initialState;
+    globalState = {
+      business: null,
+      customers: [],
+      quotes: [],
+      jobs: []
+    };
     globalIsAuthenticated = false;
     emitChange();
   }
