@@ -7,6 +7,7 @@ export interface Business {
   abn: string;
   webhookUrl: string;
   email: string;
+  password?: string;
 }
 
 export interface Customer {

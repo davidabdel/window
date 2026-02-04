@@ -21,7 +21,8 @@ const Signup: React.FC = () => {
       name: form.businessName,
       abn: form.abn,
       webhookUrl: form.webhookUrl,
-      email: form.email
+      email: form.email,
+      password: form.password
     });
     navigate('/');
   };
@@ -34,7 +35,7 @@ const Signup: React.FC = () => {
             <Briefcase size={32} />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setup Business</h1>
-          <p className="text-slate-500 mt-2">Get started with your solo cleaning hub</p>
+          <p className="text-slate-500 mt-2">Get started with your windowrun hub</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -42,13 +43,29 @@ const Signup: React.FC = () => {
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="john@example.com"
                 value={form.email}
-                onChange={e => setForm({...form, email: e.target.value})}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase px-1">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="password"
+                required
+                minLength={4}
+                className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
               />
             </div>
           </div>
@@ -57,13 +74,13 @@ const Signup: React.FC = () => {
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Business Name</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="Elite Windows"
                 value={form.businessName}
-                onChange={e => setForm({...form, businessName: e.target.value})}
+                onChange={e => setForm({ ...form, businessName: e.target.value })}
               />
             </div>
           </div>
@@ -72,19 +89,19 @@ const Signup: React.FC = () => {
             <label className="text-xs font-bold text-slate-500 uppercase px-1">ABN</label>
             <div className="relative">
               <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="12 345 678 901"
                 value={form.abn}
-                onChange={e => setForm({...form, abn: e.target.value})}
+                onChange={e => setForm({ ...form, abn: e.target.value })}
               />
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all mt-4"
           >
             Create My Business
