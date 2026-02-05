@@ -11,7 +11,7 @@ declare global {
 }
 
 // NOTE: Replace with your actual Google Maps API Key
-const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const CustomerForm: React.FC = () => {
   const { id } = useParams();
@@ -28,7 +28,11 @@ const CustomerForm: React.FC = () => {
     notes: ''
   });
 
-  const addressInputRef = useRef<HTMLInputElement>(null);
+  const [predictions, setPredictions] = useState<any[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const autocompleteService = useRef<any>(null);
+  const placesService = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -49,37 +53,71 @@ const CustomerForm: React.FC = () => {
 
   // Load Google Maps Script
   useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) return;
+
     if (!window.google && !document.getElementById('google-maps-script')) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
       script.id = 'google-maps-script';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
-      script.onload = initAutocomplete;
+      script.onload = initService;
     } else if (window.google) {
-      initAutocomplete();
+      initService();
     }
 
-    return () => {
-      // Cleanup if needed
+    // Click outside handler
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowPredictions(false);
+      }
     };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const initAutocomplete = () => {
-    if (!addressInputRef.current || !window.google) return;
+  const initService = () => {
+    if (!window.google) return;
+    if (!autocompleteService.current) {
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    }
+    if (!placesService.current) {
+      const dummy = document.createElement('div');
+      placesService.current = new window.google.maps.places.PlacesService(dummy);
+    }
+  };
 
-    const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-      types: ['address'],
-      componentRestrictions: { country: 'au' } // defaulting to AU based on previous context, can be removed
-    });
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm({ ...form, address: value });
 
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (place.formatted_address) {
-        setForm(prev => ({ ...prev, address: place.formatted_address || '' }));
-      }
-    });
+    if (!value) {
+      setPredictions([]);
+      setShowPredictions(false);
+      return;
+    }
+
+    if (autocompleteService.current) {
+      autocompleteService.current.getPlacePredictions({
+        input: value,
+        componentRestrictions: { country: 'au' },
+        types: ['address']
+      }, (results: any[], status: string) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+          setPredictions(results);
+          setShowPredictions(true);
+        } else {
+          setPredictions([]);
+          setShowPredictions(false);
+        }
+      });
+    }
+  };
+
+  const selectPrediction = (description: string) => {
+    setForm(prev => ({ ...prev, address: description }));
+    setShowPredictions(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -129,22 +167,41 @@ const CustomerForm: React.FC = () => {
           />
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1" ref={wrapperRef}>
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Full Address *</label>
           <div className="relative">
             <input
-              ref={addressInputRef}
               type="text"
               required
               className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 pl-10 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               value={form.address}
-              onChange={e => setForm({ ...form, address: e.target.value })}
-              placeholder="Start typing authentication..."
+              onChange={handleAddressChange}
+              onFocus={() => {
+                if (predictions.length > 0) setShowPredictions(true);
+              }}
+              placeholder="Start typing specific address..."
+              autoComplete="off"
             />
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+
+            {showPredictions && predictions.length > 0 && (
+              <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto">
+                {predictions.map((prediction) => (
+                  <button
+                    key={prediction.place_id}
+                    type="button"
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-slate-50 border-b last:border-0 border-slate-50 transition-colors flex items-center gap-2"
+                    onClick={() => selectPrediction(prediction.description)}
+                  >
+                    <MapPin size={14} className="text-slate-400 shrink-0" />
+                    <span className="truncate text-slate-700">{prediction.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-[10px] text-slate-400 px-1 italic">
-            {GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE' ? 'Please add your Google Maps API Key in CustomerForm.tsx to enable autocomplete.' : 'Powered by Google'}
+            {!GOOGLE_MAPS_API_KEY ? 'Please add VITE_GOOGLE_MAPS_API_KEY in .env.local' : 'Powered by Google'}
           </p>
         </div>
 
