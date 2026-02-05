@@ -18,6 +18,7 @@ import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import CustomerList from './pages/CustomerList';
 import CustomerForm from './pages/CustomerForm';
 import QuoteList from './pages/QuoteList';
@@ -91,6 +92,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Protected Routes */}

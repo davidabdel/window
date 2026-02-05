@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Lock, LogIn } from 'lucide-react';
 
@@ -58,7 +58,12 @@ const Login: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase px-1">Password</label>
+                        <div className="flex justify-between items-center px-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Password</label>
+                            <Link to="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+                                Forgot Password?
+                            </Link>
+                        </div>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input

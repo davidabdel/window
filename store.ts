@@ -128,6 +128,26 @@ export function useAppStore() {
     return { success: false };
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const res = await fetch(`${API_URL}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.error || 'Failed to reset password' };
+    } catch (e) {
+      console.error("Failed to request password reset", e);
+      return { success: false, message: 'Network error. Please try again.' };
+    }
+  };
+
   const logout = () => {
     globalIsAuthenticated = false;
     emitChange();
@@ -238,6 +258,7 @@ export function useAppStore() {
     addJob,
     updateJob,
     convertQuoteToJob,
-    syncAdminUsers
+    syncAdminUsers,
+    resetPassword
   };
 }
