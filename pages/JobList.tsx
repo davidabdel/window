@@ -36,8 +36,29 @@ const JobList: React.FC = () => {
     { label: 'All', id: 'all' },
     { label: 'Today', id: 'today' },
     { label: 'Upcoming', id: 'upcoming' },
-    { label: 'Done', id: 'completed' },
+    { label: 'Completed', id: 'completed' },
   ];
+
+  // Calculate YTD Total Invoiced (Financial Year: 1st July to Now)
+  const ytdTotal = useMemo(() => {
+    if (viewFilter !== 'completed') return 0;
+
+    const now = new Date();
+    // If current month is before July (0-5), current FY started July 1 of PREVIOUS year.
+    // If current month is July or later (6-11), current FY started July 1 of CURRENT year.
+    const startYear = now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
+    const startOfFY = new Date(startYear, 6, 1); // Month is 0-indexed, so 6 is July
+
+    return state.jobs
+      .filter(j => j.status === 'completed' && j.completedAt)
+      .reduce((sum, j) => {
+        const completedDate = new Date(j.completedAt!);
+        if (completedDate >= startOfFY && completedDate <= now) {
+          return sum + (j.price || 0);
+        }
+        return sum;
+      }, 0);
+  }, [state.jobs, viewFilter]);
 
   return (
     <div className="p-4 space-y-4">
@@ -78,6 +99,16 @@ const JobList: React.FC = () => {
               {tab.label}
             </Link>
           ))}
+        </div>
+      )}
+
+      {viewFilter === 'completed' && viewMode === 'list' && (
+        <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">YTD Total Invoiced</p>
+            <p className="text-xs text-emerald-500 mt-0.5">Financial Year (July 1st - Present)</p>
+          </div>
+          <p className="text-2xl font-bold text-emerald-700">${ytdTotal.toFixed(2)}</p>
         </div>
       )}
 
