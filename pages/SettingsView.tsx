@@ -74,7 +74,7 @@ const ChangePasswordForm: React.FC = () => {
 };
 
 const SettingsPage: React.FC = () => {
-  const { state, setBusiness, logout } = useAppStore();
+  const { state, setBusiness, logout, resetApp } = useAppStore();
 
   const handleUpdate = (updates: Partial<Business>) => {
     if (state.business) {
@@ -149,15 +149,29 @@ const SettingsPage: React.FC = () => {
       <div className="space-y-3">
         <button
           onClick={() => {
-            if (window.confirm('Are you sure you want to clear all data and logout?')) {
+            if (window.confirm('Are you sure you want to logout?')) {
               logout();
             }
           }}
-          className="w-full bg-white border border-red-200 text-red-600 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 active:bg-red-50 transition-colors"
+          className="w-full bg-white border border-slate-200 text-slate-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 active:bg-slate-50 transition-colors"
         >
           <LogOut size={20} />
-          Logout & Reset App
+          Logout
         </button>
+
+        <p className="text-center text-xs text-slate-400 pt-4">Advanced</p>
+
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to clear all data and logout? This is destructive for unsynced data.')) {
+              resetApp();
+            }
+          }}
+          className="w-full bg-red-50 border border-red-100 text-red-600 text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:bg-red-100 transition-colors"
+        >
+          Reset App Data (Debug)
+        </button>
+
         <p className="text-center text-xs text-slate-400">Version 1.0.0 (MVP Build)</p>
       </div>
     </div>
