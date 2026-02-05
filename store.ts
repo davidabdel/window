@@ -104,6 +104,53 @@ export function useAppStore() {
     return [];
   };
 
+  const syncDown = async (email: string, password?: string) => {
+    const pwd = password || globalState.business?.password;
+    if (!email || !pwd) return;
+
+    try {
+      const res = await fetch(`${API_URL}/sync-down`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pwd })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        globalState = {
+          ...globalState,
+          customers: data.customers || [],
+          quotes: data.quotes || [],
+          jobs: data.jobs || []
+        };
+        saveToStorage();
+        emitChange();
+      }
+    } catch (e) {
+      console.error("Failed to sync down", e);
+    }
+  };
+
+  const syncUp = async (type: 'customer' | 'quote' | 'job', item: any) => {
+    const business = globalState.business;
+    if (!business || !business.password) return;
+
+    try {
+      await fetch(`${API_URL}/sync-up`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: business.email,
+          password: business.password,
+          type,
+          item
+        })
+      });
+    } catch (e) {
+      console.error("Failed to sync up", e);
+    }
+  };
+
   const login = async (password: string, email?: string) => {
     // Super Admin Check
     if (email === 'david@uconnect.com.au' && password === 'admin123') {
@@ -117,6 +164,8 @@ export function useAppStore() {
     if (globalState.business?.password === password && (!email || email === globalState.business.email)) {
       globalIsAuthenticated = true;
       (globalState as any).isAdmin = false;
+      // Sync down in background to get latest
+      if (globalState.business.email) syncDown(globalState.business.email, password);
       emitChange();
       return { success: true, isAdmin: false };
     }
@@ -152,6 +201,10 @@ export function useAppStore() {
         };
 
         setBusiness(updatedBusiness as Business, true); // This saves and authenticates (skipping register)
+
+        // Sync data down
+        await syncDown(updatedBusiness.email, updatedBusiness.password);
+
         return { success: true, isAdmin: false };
       }
 
@@ -207,16 +260,19 @@ export function useAppStore() {
     };
     saveToStorage();
     emitChange();
+    syncUp('customer', newCustomer);
     return newCustomer;
   };
 
   const updateCustomer = (id: string, updates: Partial<Customer>) => {
+    const updatedCustomer = { ...globalState.customers.find(c => c.id === id)!, ...updates };
     globalState = {
       ...globalState,
-      customers: globalState.customers.map(c => c.id === id ? { ...c, ...updates } : c)
+      customers: globalState.customers.map(c => c.id === id ? updatedCustomer : c)
     };
     saveToStorage();
     emitChange();
+    syncUp('customer', updatedCustomer);
   };
 
   const addQuote = (quote: Omit<Quote, 'id' | 'createdAt'>) => {
@@ -227,16 +283,19 @@ export function useAppStore() {
     };
     saveToStorage();
     emitChange();
+    syncUp('quote', newQuote);
     return newQuote;
   };
 
   const updateQuote = (id: string, updates: Partial<Quote>) => {
+    const updatedQuote = { ...globalState.quotes.find(q => q.id === id)!, ...updates };
     globalState = {
       ...globalState,
-      quotes: globalState.quotes.map(q => q.id === id ? { ...q, ...updates } : q)
+      quotes: globalState.quotes.map(q => q.id === id ? updatedQuote : q)
     };
     saveToStorage();
     emitChange();
+    syncUp('quote', updatedQuote);
   };
 
   const addJob = (job: Omit<Job, 'id'>) => {
@@ -247,16 +306,19 @@ export function useAppStore() {
     };
     saveToStorage();
     emitChange();
+    syncUp('job', newJob);
     return newJob;
   };
 
   const updateJob = (id: string, updates: Partial<Job>) => {
+    const updatedJob = { ...globalState.jobs.find(j => j.id === id)!, ...updates };
     globalState = {
       ...globalState,
-      jobs: globalState.jobs.map(j => j.id === id ? { ...j, ...updates } : j)
+      jobs: globalState.jobs.map(j => j.id === id ? updatedJob : j)
     };
     saveToStorage();
     emitChange();
+    syncUp('job', updatedJob);
   };
 
   const convertQuoteToJob = (quoteId: string, scheduledDate: string, recurrence?: Job['recurrence']) => {

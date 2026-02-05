@@ -39,6 +39,75 @@ export default {
             }
         }
 
+        if (url.pathname === '/sync-down' && request.method === 'POST') {
+            try {
+                const { email, password } = await request.json() as any;
+
+                // Auth check
+                const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+                    .bind(email, password).first();
+
+                if (!user) return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+
+                const customers = await env.DB.prepare('SELECT * FROM customers WHERE user_email = ?').bind(email).all();
+                const quotes = await env.DB.prepare('SELECT * FROM quotes WHERE user_email = ?').bind(email).all();
+                const jobs = await env.DB.prepare('SELECT * FROM jobs WHERE user_email = ?').bind(email).all();
+
+                return new Response(JSON.stringify({
+                    customers: customers.results,
+                    quotes: quotes.results,
+                    jobs: jobs.results
+                }), {
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
+        if (url.pathname === '/sync-up' && request.method === 'POST') {
+            try {
+                const { email, password, type, item } = await request.json() as any;
+
+                // Auth check
+                const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+                    .bind(email, password).first();
+
+                if (!user) return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+
+                if (type === 'customer') {
+                    await env.DB.prepare(`
+                        INSERT INTO customers (id, user_email, name, address, phone, customer_email, defaultPrice, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                        name=excluded.name, address=excluded.address, phone=excluded.phone, 
+                        customer_email=excluded.customer_email, defaultPrice=excluded.defaultPrice, notes=excluded.notes
+                    `).bind(item.id, email, item.name, item.address, item.phone, item.email, item.defaultPrice, item.notes).run();
+                } else if (type === 'quote') {
+                    await env.DB.prepare(`
+                        INSERT INTO quotes (id, user_email, customerId, description, amount, notes, status, createdAt)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                        description=excluded.description, amount=excluded.amount, notes=excluded.notes, status=excluded.status
+                    `).bind(item.id, email, item.customerId, item.description, item.amount, item.notes, item.status, item.createdAt).run();
+                } else if (type === 'job') {
+                    await env.DB.prepare(`
+                        INSERT INTO jobs (id, user_email, customerId, quoteId, description, scheduledDate, price, notes, status, completedAt, recurrence)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                        description=excluded.description, scheduledDate=excluded.scheduledDate, price=excluded.price, 
+                        notes=excluded.notes, status=excluded.status, completedAt=excluded.completedAt, recurrence=excluded.recurrence
+                    `).bind(item.id, email, item.customerId, item.quoteId, item.description, item.scheduledDate, item.price, item.notes, item.status, item.completedAt, JSON.stringify(item.recurrence)).run();
+                }
+
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
         if (url.pathname === '/register' && request.method === 'POST') {
             try {
                 const { businessName, email, abn, password } = await request.json() as any;
