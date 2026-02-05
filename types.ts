@@ -13,6 +13,7 @@ export interface Business {
 export interface Customer {
   id: string;
   name: string;
+  businessName?: string;
   address: string;
   phone?: string;
   email?: string;

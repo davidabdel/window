@@ -77,15 +77,16 @@ export default {
 
                 if (type === 'customer') {
                     await env.DB.prepare(`
-                        INSERT INTO customers (id, user_email, name, address, phone, customer_email, defaultPrice, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO customers (id, user_email, name, businessName, address, phone, customer_email, defaultPrice, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT(id) DO UPDATE SET
-                        name=excluded.name, address=excluded.address, phone=excluded.phone, 
+                        name=excluded.name, businessName=excluded.businessName, address=excluded.address, phone=excluded.phone, 
                         customer_email=excluded.customer_email, defaultPrice=excluded.defaultPrice, notes=excluded.notes
                     `).bind(
                         item.id,
                         email,
                         item.name,
+                        item.businessName || null,
                         item.address,
                         item.phone || null,
                         item.email || null,

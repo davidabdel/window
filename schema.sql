@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS customers (
     id TEXT PRIMARY KEY,
     user_email TEXT,
     name TEXT,
+    businessName TEXT,
     address TEXT,
     phone TEXT,
     customer_email TEXT,
