@@ -1,5 +1,5 @@
 
-export type QuoteStatus = 'draft' | 'needs-follow-up' | 'accepted';
+export type QuoteStatus = 'draft' | 'needs-follow-up' | 'accepted' | 'rejected';
 export type JobStatus = 'scheduled' | 'completed';
 
 export interface Business {

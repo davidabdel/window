@@ -136,6 +136,7 @@ const QuoteForm: React.FC = () => {
               <option value="draft">Draft</option>
               <option value="needs-follow-up">Needs Follow-Up</option>
               <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
         </div>
