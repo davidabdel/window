@@ -20,6 +20,10 @@ try {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     globalState = JSON.parse(saved);
+    // Auto-login if business data exists
+    if (globalState.business) {
+      globalIsAuthenticated = true;
+    }
   }
 } catch (e) {
   console.error('Failed to load state', e);
