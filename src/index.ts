@@ -82,7 +82,16 @@ export default {
                         ON CONFLICT(id) DO UPDATE SET
                         name=excluded.name, address=excluded.address, phone=excluded.phone, 
                         customer_email=excluded.customer_email, defaultPrice=excluded.defaultPrice, notes=excluded.notes
-                    `).bind(item.id, email, item.name, item.address, item.phone, item.email, item.defaultPrice, item.notes).run();
+                    `).bind(
+                        item.id,
+                        email,
+                        item.name,
+                        item.address,
+                        item.phone || null,
+                        item.email || null,
+                        item.defaultPrice || null,
+                        item.notes || null
+                    ).run();
                 } else if (type === 'quote') {
                     await env.DB.prepare(`
                         INSERT INTO quotes (id, user_email, customerId, description, amount, notes, status, createdAt)
