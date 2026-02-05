@@ -107,6 +107,7 @@ const AdminDashboard: React.FC = () => {
                                     <th className="px-6 py-4">Business Name</th>
                                     <th className="px-6 py-4">Email Address</th>
                                     <th className="px-6 py-4">ABN</th>
+                                    <th className="px-6 py-4">Customers</th>
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
@@ -114,7 +115,7 @@ const AdminDashboard: React.FC = () => {
                             <tbody className="divide-y divide-slate-100">
                                 {cloudUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                                        <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
                                             No registered users found in cloud yet.
                                         </td>
                                     </tr>
@@ -129,6 +130,9 @@ const AdminDashboard: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 font-mono text-xs">
                                                 {user.abn}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600 font-bold">
+                                                {user.customerCount || 0}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

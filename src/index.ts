@@ -240,7 +240,13 @@ export default {
             const secret = request.headers.get('X-Admin-Key');
             // For now, super simple protection (we can improve later)
 
-            const { results } = await env.DB.prepare('SELECT * FROM users').all();
+            const { results } = await env.DB.prepare(`
+                SELECT users.*, COUNT(customers.id) as customerCount 
+                FROM users 
+                LEFT JOIN customers ON users.email = customers.user_email 
+                GROUP BY users.id
+            `).all();
+
             return new Response(JSON.stringify(results), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             });
