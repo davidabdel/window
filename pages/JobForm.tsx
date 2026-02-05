@@ -8,8 +8,8 @@ import { JobStatus } from '../types';
 const JobForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, addJob, updateJob } = useAppStore();
-  
+  const { state, addJob, updateJob, deleteJob } = useAppStore();
+
   const [form, setForm] = useState<{
     customerId: string;
     description: string;
@@ -62,9 +62,9 @@ const JobForm: React.FC = () => {
 
   const markCompleted = () => {
     if (!id) return;
-    updateJob(id, { 
+    updateJob(id, {
       status: 'completed',
-      completedAt: new Date().toISOString() 
+      completedAt: new Date().toISOString()
     });
     setForm(f => ({ ...f, status: 'completed' }));
   };
@@ -134,7 +134,7 @@ const JobForm: React.FC = () => {
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Customer *</label>
-          <select 
+          <select
             required
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
             value={form.customerId}
@@ -142,7 +142,7 @@ const JobForm: React.FC = () => {
               const customerId = e.target.value;
               const customer = state.customers.find(c => c.id === customerId);
               setForm({
-                ...form, 
+                ...form,
                 customerId,
                 price: customer?.defaultPrice?.toString() || form.price
               });
@@ -157,51 +157,51 @@ const JobForm: React.FC = () => {
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Description *</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             required
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             value={form.description}
-            onChange={e => setForm({...form, description: e.target.value})}
+            onChange={e => setForm({ ...form, description: e.target.value })}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Price ($) *</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               required
               className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold"
               value={form.price}
-              onChange={e => setForm({...form, price: e.target.value})}
+              onChange={e => setForm({ ...form, price: e.target.value })}
             />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-500 uppercase px-1">Scheduled At</label>
-            <input 
-              type="datetime-local" 
+            <input
+              type="datetime-local"
               required
               className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               value={form.scheduledDate}
-              onChange={e => setForm({...form, scheduledDate: e.target.value})}
+              onChange={e => setForm({ ...form, scheduledDate: e.target.value })}
             />
           </div>
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-slate-500 uppercase px-1">Internal Notes</label>
-          <textarea 
+          <textarea
             rows={3}
             className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             value={form.notes}
-            onChange={e => setForm({...form, notes: e.target.value})}
+            onChange={e => setForm({ ...form, notes: e.target.value })}
           />
         </div>
 
         <div className="pt-4 flex flex-col gap-3">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
             <Save size={20} />
@@ -209,7 +209,7 @@ const JobForm: React.FC = () => {
           </button>
 
           {id && form.status === 'scheduled' && (
-            <button 
+            <button
               type="button"
               onClick={markCompleted}
               className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
@@ -221,7 +221,7 @@ const JobForm: React.FC = () => {
 
           {id && form.status === 'completed' && (
             <div className="space-y-3">
-              <button 
+              <button
                 type="button"
                 disabled={loading}
                 onClick={handleInvoiceWebhook}
@@ -230,15 +230,30 @@ const JobForm: React.FC = () => {
                 <Send size={20} />
                 {loading ? 'Sending...' : 'Generate Invoice'}
               </button>
-              
+
               {webhookMessage && (
-                <div className={`p-4 rounded-xl text-center text-sm font-bold ${
-                  webhookMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                }`}>
+                <div className={`p-4 rounded-xl text-center text-sm font-bold ${webhookMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                  }`}>
                   {webhookMessage.text}
                 </div>
               )}
             </div>
+          )}
+
+          {id && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+                  deleteJob(id);
+                  navigate('/jobs');
+                }
+              }}
+              className="w-full bg-white border border-red-200 text-red-600 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2 active:bg-red-50 transition-colors mt-2"
+            >
+              <Trash2 size={20} />
+              Delete Job
+            </button>
           )}
         </div>
       </form>

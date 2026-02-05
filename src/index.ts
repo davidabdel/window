@@ -129,6 +129,32 @@ export default {
             }
         }
 
+        if (url.pathname === '/sync-delete' && request.method === 'POST') {
+            try {
+                const { email, password, type, id } = await request.json() as any;
+
+                // Auth check
+                const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+                    .bind(email, password).first();
+
+                if (!user) return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+
+                if (type === 'customer') {
+                    await env.DB.prepare('DELETE FROM customers WHERE id = ? AND user_email = ?').bind(id, email).run();
+                } else if (type === 'quote') {
+                    await env.DB.prepare('DELETE FROM quotes WHERE id = ? AND user_email = ?').bind(id, email).run();
+                } else if (type === 'job') {
+                    await env.DB.prepare('DELETE FROM jobs WHERE id = ? AND user_email = ?').bind(id, email).run();
+                }
+
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
         if (url.pathname === '/change-password' && request.method === 'POST') {
             try {
                 const { email, currentPassword, newPassword } = await request.json() as any;

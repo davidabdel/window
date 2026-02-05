@@ -378,6 +378,46 @@ export function useAppStore() {
     syncUp('job', updatedJob);
   };
 
+  const syncDelete = async (type: 'customer' | 'quote' | 'job', id: string) => {
+    const business = globalState.business;
+    if (!business || !business.password) return;
+
+    emitSyncStatus('saving');
+    try {
+      const res = await fetch(`${API_URL}/sync-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: business.email,
+          password: business.password,
+          type,
+          id
+        })
+      });
+
+      if (res.ok) {
+        emitSyncStatus('saved');
+        setTimeout(() => emitSyncStatus('idle'), 2000);
+      } else {
+        console.error("Server delete failed", await res.text());
+        emitSyncStatus('error');
+      }
+    } catch (e) {
+      console.error("Failed to sync delete", e);
+      emitSyncStatus('error');
+    }
+  };
+
+  const deleteJob = (id: string) => {
+    globalState = {
+      ...globalState,
+      jobs: globalState.jobs.filter(j => j.id !== id)
+    };
+    saveToStorage();
+    emitChange();
+    syncDelete('job', id);
+  };
+
   const convertQuoteToJob = (quoteId: string, scheduledDate: string, recurrence?: Job['recurrence']) => {
     const quote = globalState.quotes.find(q => q.id === quoteId);
     if (!quote) return;
@@ -410,6 +450,7 @@ export function useAppStore() {
     updateQuote,
     addJob,
     updateJob,
+    deleteJob,
     convertQuoteToJob,
     syncAdminUsers,
     resetPassword,
