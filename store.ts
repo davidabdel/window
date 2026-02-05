@@ -466,6 +466,15 @@ export function useAppStore() {
     syncAdminUsers,
     resetPassword,
     changePassword,
-    syncStatus
+    syncStatus,
+    forceSyncAll: async () => {
+      let count = 0;
+      await Promise.all([
+        ...globalState.customers.map(c => syncUp('customer', c)),
+        ...globalState.quotes.map(q => syncUp('quote', q)),
+        ...globalState.jobs.map(j => syncUp('job', j))
+      ]);
+      return true;
+    }
   };
 }

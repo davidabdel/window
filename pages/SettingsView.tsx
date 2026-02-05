@@ -74,7 +74,7 @@ const ChangePasswordForm: React.FC = () => {
 };
 
 const SettingsPage: React.FC = () => {
-  const { state, setBusiness, logout, resetApp } = useAppStore();
+  const { state, setBusiness, logout, resetApp, forceSyncAll } = useAppStore();
 
   const handleUpdate = (updates: Partial<Business>) => {
     if (state.business) {
@@ -160,6 +160,23 @@ const SettingsPage: React.FC = () => {
         </button>
 
         <p className="text-center text-xs text-slate-400 pt-4">Advanced</p>
+
+        <button
+          onClick={async () => {
+            const btn = document.getElementById('force-sync-btn');
+            if (btn) btn.textContent = 'Syncing...';
+            await forceSyncAll();
+            if (btn) btn.textContent = 'Sync Complete!';
+            setTimeout(() => {
+              if (btn) btn.textContent = 'Force Cloud Sync (Fix Data)';
+            }, 2000);
+          }}
+          id="force-sync-btn"
+          className="w-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:bg-blue-100 transition-colors"
+        >
+          <Globe size={14} />
+          Force Cloud Sync (Fix Data)
+        </button>
 
         <button
           onClick={() => {
