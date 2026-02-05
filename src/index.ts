@@ -108,6 +108,32 @@ export default {
             }
         }
 
+        if (url.pathname === '/change-password' && request.method === 'POST') {
+            try {
+                const { email, currentPassword, newPassword } = await request.json() as any;
+
+                // Auth check
+                const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+                    .bind(email, currentPassword).first();
+
+                if (!user) {
+                    return new Response(JSON.stringify({ success: false, error: 'Incorrect current password' }), {
+                        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                    });
+                }
+
+                // Update password
+                await env.DB.prepare('UPDATE users SET password = ? WHERE email = ?')
+                    .bind(newPassword, email).run();
+
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
         if (url.pathname === '/register' && request.method === 'POST') {
             try {
                 const { businessName, email, abn, password } = await request.json() as any;

@@ -151,6 +151,41 @@ export function useAppStore() {
     }
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const business = globalState.business;
+    if (!business || !business.email) return { success: false, message: 'Not logged in' };
+
+    try {
+      const res = await fetch(`${API_URL}/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: business.email,
+          currentPassword,
+          newPassword
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Update local state with new password so sync keeps working
+        globalState = {
+          ...globalState,
+          business: { ...globalState.business, password: newPassword } as Business
+        };
+        saveToStorage(); // Important to save this
+        emitChange();
+        return { success: true, message: 'Password updated successfully' };
+      } else {
+        return { success: false, message: data.error || 'Failed to update password' };
+      }
+    } catch (e) {
+      console.error("Failed to change password", e);
+      return { success: false, message: 'Network error' };
+    }
+  };
+
   const login = async (password: string, email?: string) => {
     // Super Admin Check
     if (email === 'david@uconnect.com.au' && password === 'admin123') {
@@ -355,6 +390,7 @@ export function useAppStore() {
     updateJob,
     convertQuoteToJob,
     syncAdminUsers,
-    resetPassword
+    resetPassword,
+    changePassword
   };
 }
