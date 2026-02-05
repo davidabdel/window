@@ -2,11 +2,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../store';
-import { ArrowLeft, Save, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Trash2 } from 'lucide-react';
 
 declare global {
   interface Window {
     google: any;
+  }
+  interface ImportMeta {
+    env: {
+      VITE_GOOGLE_MAPS_API_KEY: string;
+    };
   }
 }
 
@@ -16,7 +21,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const CustomerForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, addCustomer, updateCustomer } = useAppStore();
+  const { state, addCustomer, updateCustomer, deleteCustomer } = useAppStore();
 
   const [form, setForm] = useState({
     name: '',
@@ -178,6 +183,15 @@ const CustomerForm: React.FC = () => {
     navigate('/customers');
   };
 
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+      if (id) {
+        deleteCustomer(id);
+        navigate('/customers');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-full">
       <div className="p-4 flex items-center gap-3">
@@ -297,6 +311,17 @@ const CustomerForm: React.FC = () => {
           <Save size={20} />
           {id ? 'Update Customer' : 'Create Customer'}
         </button>
+
+        {id && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="w-full bg-white text-red-500 font-bold py-4 rounded-xl border border-red-100 flex items-center justify-center gap-2 active:scale-95 transition-transform mt-4"
+          >
+            <Trash2 size={20} />
+            Delete Customer
+          </button>
+        )}
       </form>
     </div>
   );

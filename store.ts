@@ -418,6 +418,16 @@ export function useAppStore() {
     syncDelete('job', id);
   };
 
+  const deleteCustomer = (id: string) => {
+    globalState = {
+      ...globalState,
+      customers: globalState.customers.filter(c => c.id !== id)
+    };
+    saveToStorage();
+    emitChange();
+    syncDelete('customer', id);
+  }
+
   const convertQuoteToJob = (quoteId: string, scheduledDate: string, recurrence?: Job['recurrence']) => {
     const quote = globalState.quotes.find(q => q.id === quoteId);
     if (!quote) return;
@@ -446,6 +456,7 @@ export function useAppStore() {
     updateBusiness,
     addCustomer,
     updateCustomer,
+    deleteCustomer,
     addQuote,
     updateQuote,
     addJob,
