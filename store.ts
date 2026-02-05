@@ -111,20 +111,52 @@ export function useAppStore() {
       return { success: true, isAdmin: true };
     }
 
-    // Regular User Check
-    if (!globalState.business?.password) return { success: false };
-
-    // If email is provided, verify it matches
-    if (email && email !== globalState.business.email) {
-      return { success: false };
-    }
-
-    if (globalState.business.password === password) {
+    // If local matches, great
+    if (globalState.business?.password === password && (!email || email === globalState.business.email)) {
       globalIsAuthenticated = true;
       (globalState as any).isAdmin = false;
       emitChange();
       return { success: true, isAdmin: false };
     }
+
+    // Fallback: Check server (e.g. if password was reset)
+    try {
+      if (!email && globalState.business?.email) {
+        email = globalState.business.email;
+      }
+
+      if (!email) return { success: false };
+
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.user) {
+        // Update local state with new data from server
+        // Ensure we keep existing business data but update what we got from server
+        const updatedBusiness = {
+          ...globalState.business, // Start with what we have
+          // Overwrite with server data (mapping server columns to our typings if needed)
+          // Assuming server returns matches Business interface: name, email, abn, password...
+          name: data.user.businessName || data.user.name,
+          email: data.user.email,
+          abn: data.user.abn,
+          password: data.user.password, // IMPORTANT: Update the local password
+          webhookUrl: globalState.business?.webhookUrl || '' // Preserve or default
+        };
+
+        setBusiness(updatedBusiness as Business); // This saves and authenticates
+        return { success: true, isAdmin: false };
+      }
+
+    } catch (e) {
+      console.error("Login fallback failed", e);
+    }
+
     return { success: false };
   };
 

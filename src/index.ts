@@ -17,6 +17,28 @@ export default {
 
         const url = new URL(request.url);
 
+        if (url.pathname === '/login' && request.method === 'POST') {
+            try {
+                const { email, password } = await request.json() as any;
+
+                const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+                    .bind(email, password)
+                    .first();
+
+                if (!user) {
+                    return new Response(JSON.stringify({ success: false, error: 'Invalid credentials' }), {
+                        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                    });
+                }
+
+                return new Response(JSON.stringify({ success: true, user }), {
+                    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                });
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
         if (url.pathname === '/register' && request.method === 'POST') {
             try {
                 const { businessName, email, abn, password } = await request.json() as any;
