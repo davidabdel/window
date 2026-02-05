@@ -192,11 +192,60 @@ const CalendarView: React.FC<{
   };
 
   const monthJobs = useMemo(() => {
-    return jobs.filter(job => {
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    const virtualJobs: Job[] = [];
+
+    jobs.forEach(job => {
       const jobDate = new Date(job.scheduledDate);
-      return jobDate.getMonth() === currentDate.getMonth() &&
-        jobDate.getFullYear() === currentDate.getFullYear();
+
+      // If simple job (no recurrence), just check if it fits
+      if (!job.recurrence) {
+        if (jobDate.getMonth() === currentDate.getMonth() && jobDate.getFullYear() === currentDate.getFullYear()) {
+          virtualJobs.push(job);
+        }
+        return;
+      }
+
+      // If recurring, generate instances
+      let currentInstanceDate = new Date(jobDate);
+
+      // If the job started before this month, we need to advance it to at least the start of this month
+      // This is a naive implementation; for efficiency one might calculate the jump mathematically.
+      // But for <100 jobs, a while loop is fine.
+
+      // However, we must ensure we align with the proper interval.
+      // Easiest correct way: Start from original date and add intervals until we hit or pass the month window.
+
+      const endDate = job.recurrence.endDate ? new Date(job.recurrence.endDate) : new Date(9999, 11, 31);
+
+      while (currentInstanceDate <= endOfMonth && currentInstanceDate <= endDate) {
+        // If instance is within current month, add it
+        if (currentInstanceDate >= startOfMonth && currentInstanceDate <= endOfMonth) {
+          // Create a virtual job instance, cloning the original but updating the date
+          // We append a suffix to ID to ensure unique keys in map
+          virtualJobs.push({
+            ...job,
+            id: `${job.id}-${currentInstanceDate.toISOString()}`, // Virtual ID
+            scheduledDate: currentInstanceDate.toISOString().split('T')[0]
+          });
+        }
+
+        // Advance date
+        if (job.recurrence.frequency === 'weekly') {
+          currentInstanceDate.setDate(currentInstanceDate.getDate() + 7);
+        } else if (job.recurrence.frequency === 'fortnightly') {
+          currentInstanceDate.setDate(currentInstanceDate.getDate() + 14);
+        } else if (job.recurrence.frequency === 'monthly') {
+          currentInstanceDate.setMonth(currentInstanceDate.getMonth() + 1);
+        } else {
+          break; // Safety
+        }
+      }
     });
+
+    return virtualJobs;
   }, [jobs, currentDate]);
 
   const renderDays = () => {

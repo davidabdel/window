@@ -97,7 +97,19 @@ export default {
                         ON CONFLICT(id) DO UPDATE SET
                         description=excluded.description, scheduledDate=excluded.scheduledDate, price=excluded.price, 
                         notes=excluded.notes, status=excluded.status, completedAt=excluded.completedAt, recurrence=excluded.recurrence
-                    `).bind(item.id, email, item.customerId, item.quoteId, item.description, item.scheduledDate, item.price, item.notes, item.status, item.completedAt, JSON.stringify(item.recurrence)).run();
+                    `).bind(
+                        item.id,
+                        email,
+                        item.customerId,
+                        item.quoteId || null,
+                        item.description,
+                        item.scheduledDate,
+                        item.price,
+                        item.notes || null,
+                        item.status,
+                        item.completedAt || null,
+                        item.recurrence ? JSON.stringify(item.recurrence) : null
+                    ).run();
                 }
 
                 return new Response(JSON.stringify({ success: true }), {
