@@ -103,11 +103,18 @@ const JobForm: React.FC = () => {
       quote_id: job?.quoteId
     };
 
+
+
     try {
-      const response = await fetch(state.business.webhookUrl, {
+      // Use proxy to avoid CORS
+      const API_URL = 'https://windowrun-api.david-d4d.workers.dev';
+      const response = await fetch(`${API_URL}/proxy-webhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          targetUrl: state.business.webhookUrl,
+          payload
+        })
       });
 
       if (response.ok) {

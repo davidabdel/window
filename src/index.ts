@@ -252,6 +252,32 @@ export default {
             });
         }
 
+        if (url.pathname === '/proxy-webhook' && request.method === 'POST') {
+            try {
+                const { targetUrl, payload } = await request.json() as any;
+
+                if (!targetUrl || !payload) {
+                    return new Response(JSON.stringify({ error: 'Missing targetUrl or payload' }), { status: 400, headers: corsHeaders });
+                }
+
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    return new Response(JSON.stringify({ success: true }), {
+                        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+                    });
+                } else {
+                    return new Response(JSON.stringify({ error: `External server error: ${response.status}` }), { status: 502, headers: corsHeaders });
+                }
+            } catch (e) {
+                return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+            }
+        }
+
         return new Response('Not Found', { status: 404, headers: corsHeaders });
     },
 };
