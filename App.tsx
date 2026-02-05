@@ -9,7 +9,10 @@ import {
   Settings,
   Plus,
   ArrowLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 import { useAppStore } from './store';
 
@@ -27,6 +30,35 @@ import JobList from './pages/JobList';
 import JobForm from './pages/JobForm';
 import AdminDashboard from './pages/AdminDashboard';
 import SettingsPage from './pages/SettingsView';
+
+const SyncIndicator: React.FC = () => {
+  const { syncStatus } = useAppStore();
+
+  if (syncStatus === 'idle') return null;
+
+  if (syncStatus === 'saving') return (
+    <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+      <RefreshCw size={12} className="animate-spin" />
+      Saving...
+    </div>
+  );
+
+  if (syncStatus === 'saved') return (
+    <div className="flex items-center gap-1.5 bg-green-50 text-green-600 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+      <Check size={12} />
+      Saved
+    </div>
+  );
+
+  if (syncStatus === 'error') return (
+    <div className="flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+      <AlertTriangle size={12} />
+      Not Saved
+    </div>
+  );
+
+  return null;
+};
 
 const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { state, isAuthenticated } = useAppStore();
@@ -55,7 +87,7 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
           {state.business.name}
         </h1>
         <div className="flex items-center gap-2">
-          {/* Header actions could go here */}
+          <SyncIndicator />
         </div>
       </header>
 

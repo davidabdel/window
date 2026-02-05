@@ -28,8 +28,15 @@ try {
 // Subscription system
 const listeners = new Set<() => void>();
 
+// Add sync status listener
+const syncListeners = new Set<(status: 'idle' | 'saving' | 'saved' | 'error') => void>();
+
 const emitChange = () => {
   listeners.forEach(listener => listener());
+};
+
+const emitSyncStatus = (status: 'idle' | 'saving' | 'saved' | 'error') => {
+  syncListeners.forEach(l => l(status));
 };
 
 const saveToStorage = () => {
@@ -38,12 +45,17 @@ const saveToStorage = () => {
 
 export function useAppStore() {
   const [, setTick] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   useEffect(() => {
     const listener = () => setTick(t => t + 1);
+    const syncListener = (s: 'idle' | 'saving' | 'saved' | 'error') => setSyncStatus(s);
+
     listeners.add(listener);
+    syncListeners.add(syncListener);
     return () => {
       listeners.delete(listener);
+      syncListeners.delete(syncListener);
     };
   }, []);
 
@@ -135,8 +147,9 @@ export function useAppStore() {
     const business = globalState.business;
     if (!business || !business.password) return;
 
+    emitSyncStatus('saving');
     try {
-      await fetch(`${API_URL}/sync-up`, {
+      const res = await fetch(`${API_URL}/sync-up`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -146,8 +159,17 @@ export function useAppStore() {
           item
         })
       });
+
+      if (res.ok) {
+        emitSyncStatus('saved');
+        setTimeout(() => emitSyncStatus('idle'), 2000);
+      } else {
+        console.error("Server update failed", await res.text());
+        emitSyncStatus('error');
+      }
     } catch (e) {
       console.error("Failed to sync up", e);
+      emitSyncStatus('error');
     }
   };
 
@@ -391,6 +413,7 @@ export function useAppStore() {
     convertQuoteToJob,
     syncAdminUsers,
     resetPassword,
-    changePassword
+    changePassword,
+    syncStatus
   };
 }
