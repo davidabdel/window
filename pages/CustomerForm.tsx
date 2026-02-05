@@ -30,6 +30,7 @@ const CustomerForm: React.FC = () => {
 
   const [predictions, setPredictions] = useState<any[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
+  const [scriptError, setScriptError] = useState<string | null>(null);
   const autocompleteService = useRef<any>(null);
   const placesService = useRef<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -55,17 +56,44 @@ const CustomerForm: React.FC = () => {
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) return;
 
-    if (!window.google && !document.getElementById('google-maps-script')) {
+    const loadScript = () => {
+      // If already loaded and available
+      if (window.google?.maps?.places) {
+        initService();
+        return;
+      }
+
+      const scriptId = 'google-maps-script';
+      if (document.getElementById(scriptId)) {
+        // Script exists, check if loaded?
+        if (window.google?.maps?.places) initService();
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
-      script.id = 'google-maps-script';
+      script.id = scriptId;
       script.async = true;
       script.defer = true;
+      script.onerror = () => {
+        setScriptError('Google Maps failed to load. Please disable ad blockers.');
+        console.error('Google Maps script load error - likely blocked by client');
+      };
       document.head.appendChild(script);
-      script.onload = initService;
-    } else if (window.google) {
-      initService();
-    }
+
+      // Poll for Google Maps to be ready (since we use loading=async)
+      const checkGoogle = setInterval(() => {
+        if (window.google?.maps?.places) {
+          clearInterval(checkGoogle);
+          initService();
+        }
+      }, 100);
+
+      // Timeout after 10s
+      setTimeout(() => clearInterval(checkGoogle), 10000);
+    };
+
+    loadScript();
 
     // Click outside handler
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,13 +106,28 @@ const CustomerForm: React.FC = () => {
   }, []);
 
   const initService = () => {
-    if (!window.google) return;
-    if (!autocompleteService.current) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    if (!window.google?.maps?.places) {
+      console.warn("Google Maps Places library not ready yet.");
+      return;
     }
-    if (!placesService.current) {
-      const dummy = document.createElement('div');
-      placesService.current = new window.google.maps.places.PlacesService(dummy);
+
+    try {
+      if (!autocompleteService.current) {
+        // Check if AutocompleteService exists (it might be deprecated in 2026 for new keys)
+        if (window.google.maps.places.AutocompleteService) {
+          autocompleteService.current = new window.google.maps.places.AutocompleteService();
+        } else {
+          console.error("AutocompleteService is missing. API might be deprecated.");
+          setScriptError("Detailed Address Autocomplete is not available for this API key.");
+        }
+      }
+      if (!placesService.current && window.google.maps.places.PlacesService) {
+        const dummy = document.createElement('div');
+        placesService.current = new window.google.maps.places.PlacesService(dummy);
+      }
+    } catch (e) {
+      console.error("Error initializing Google Maps Services:", e);
+      setScriptError("Error initializing Maps services.");
     }
   };
 
@@ -202,6 +245,7 @@ const CustomerForm: React.FC = () => {
           </div>
           <p className="text-[10px] text-slate-400 px-1 italic">
             {!GOOGLE_MAPS_API_KEY ? 'Please add VITE_GOOGLE_MAPS_API_KEY in .env.local' : 'Powered by Google'}
+            {scriptError && <span className="text-red-500 block font-bold mt-1">{scriptError}</span>}
           </p>
         </div>
 
