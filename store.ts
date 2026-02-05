@@ -50,7 +50,7 @@ export function useAppStore() {
 
   const API_URL = 'https://windowrun-api.david-d4d.workers.dev';
 
-  const setBusiness = async (business: Business) => {
+  const setBusiness = async (business: Business, skipCloudSync = false) => {
     // 1. Update Local State Immediately (Optimistic)
     globalState = { ...globalState, business };
     globalIsAuthenticated = true; // Authenticate immediately
@@ -58,6 +58,8 @@ export function useAppStore() {
     emitChange(); // Notify app immediately so navigation works
 
     // 2. Sync with Cloudflare D1 (Background)
+    if (skipCloudSync) return;
+
     try {
       await fetch(`${API_URL}/register`, {
         method: 'POST',
@@ -149,7 +151,7 @@ export function useAppStore() {
           webhookUrl: globalState.business?.webhookUrl || '' // Preserve or default
         };
 
-        setBusiness(updatedBusiness as Business); // This saves and authenticates
+        setBusiness(updatedBusiness as Business, true); // This saves and authenticates (skipping register)
         return { success: true, isAdmin: false };
       }
 
